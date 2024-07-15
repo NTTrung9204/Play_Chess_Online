@@ -1,16 +1,15 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-async function connect(mongoURL){
-    try{
-        await mongoose.connect(mongoURL ,{
+async function connect() {
+    try {
+        await mongoose.connect("mongodb://localhost:27017/chess_web", {
             useNewUrlParser: true,
-            useUnifiedTopology: true
+            useUnifiedTopology: true,
         });
         console.log("connect successfully");
-    } catch(error){
+    } catch (error) {
         console.log("connect failure!");
     }
-
 }
 
-module.exports = connect
+module.exports = { connect };
