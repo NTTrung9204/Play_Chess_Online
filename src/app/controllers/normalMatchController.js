@@ -1,4 +1,5 @@
 const roomDB = require("../models/room");
+const userDB = require("../models/user");
 const getRecord = require("../utils/getRecord");
 const getRandom = require("../utils/getRandom");
 
@@ -50,7 +51,24 @@ class normalMatchController {
                     room = getRecord.getOneRecord(room);
                     if(room){
                         if(!room.is_closed){
-                            res.render("room/normalRoom", { room });
+                            const white_player = userDB.findById(room.white_player);
+                            const black_player = userDB.findById(room.black_player);
+                            Promise.all([white_player, black_player])
+                                .then((players) => {
+                                    if(players[0]){
+                                        room.white_player = getRecord.getOneRecord(players[0]);
+                                    }
+                                    if(players[1]){
+                                        room.black_player = getRecord.getOneRecord(players[1]);
+                                    }
+
+                                    res.render("room/normalRoom", { room });
+                                })
+                                .catch((error) => {
+                                    console.log("join room failure!");
+                                    console.log(error);
+                                    res.json({ error: "join room failure!" });
+                                });
                         }
                         else{
                             console.log("join room failure!: room is closed");
