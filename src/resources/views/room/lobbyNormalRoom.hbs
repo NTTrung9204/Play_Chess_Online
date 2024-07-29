@@ -1,0 +1,32 @@
+{{#if rooms}}
+<p>
+    {{#each rooms}}
+    <a href="/normalMatch/{{this._id}}">{{this.name_room}}</a>
+    {{/each}}
+</p>
+{{else}}
+<p>No rooms</p>
+{{/if}}
+
+<button>
+    <a href="/normalMatch/createRoom">Create room</a>
+</button>
+
+<script>
+    let shouldPrompt = false;
+
+    // Đặt cờ khi người dùng đang ở URL /abc
+    if (window.location.pathname === '/normalMatch') {
+        shouldPrompt = true;
+    }
+
+    window.addEventListener('beforeunload', function (event) {
+        if (shouldPrompt) {
+            // Thiết lập thông báo xác nhận
+            event.preventDefault(); // Theo chuẩn, bạn cần gọi preventDefault để hiện thông báo
+            event.returnValue = ''; // Truyền một chuỗi rỗng để kích hoạt thông báo mặc định
+            // Thông báo mặc định sẽ được hiển thị bởi trình duyệt
+        }
+    });
+
+</script>
