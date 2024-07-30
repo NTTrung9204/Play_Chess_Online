@@ -35,11 +35,5 @@
 
 <script>
     const socket = io();
-    socket.emit("join", "roomabc");
 
-    socket.emit("abc", "lobby abc");
-
-    socket.on("xyz", (data) => {
-        console.log(data);
-    });
 </script>

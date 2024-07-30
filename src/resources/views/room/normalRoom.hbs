@@ -18,11 +18,15 @@
     {{/if}}
 </p>
 
+<div id="message__room">
+
+</div>
+
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
     const socket = io();
-    socket.emit("join", "{{room._id}}", "{{user._id}}");
+    socket.emit("join", "{{room._id}}", "{{user._id}}", "{{user.username}}", "{{room.white_player._id}}", "{{room.black_player._id}}");
 
     function settingJoin() {
         $(".btn__join").click(function () {
@@ -35,7 +39,6 @@
     settingJoin()
 
     socket.on("join__normal__room", (player, player__name) => {
-        console.log(player, player__name);
         if (player === "White") {
             $("#White").html(player__name);
             $("#White").attr("data-user_id", player__name);
@@ -46,8 +49,7 @@
         }
     });
 
-    socket.on("user_disconnect", (user_id) => {
-        console.log(user_id);
+    socket.on("user_disconnect", (user_id, user_name) => {
         if ($("#White").attr("data-user_id") === user_id) {
             $("#White").html("<button class='btn__join' data-player='White'>join</button>");
             $("#White").attr("data-user_id", "");
@@ -56,19 +58,22 @@
         if ($("#Black").attr("data-user_id") === user_id) {
             $("#Black").html("<button class='btn__join' data-player='Black'>join</button>");
             $("#Black").attr("data-user_id", "");
-            joinGame()
+            settingJoin()
         }
+        $("#message__room").append(`<p style = "text-align: center">${user_name} left room</p>`)
     });
+
+    socket.on("user_connect", (user_id, user_name) =>{
+        $("#message__room").append(`<p style = "text-align: center">${user_name} joined</p>`)
+    })
 </script>
 
 <script>
     let shouldPrompt = false;
-    console.log($("#Black").attr("data-user_id"), $("#White").attr("data-user_id"));
 
     if ("{{user._id}}" === $("#Black").attr("data-user_id") || "{{user._id}}" === $("#White").attr("data-user_id")) {
         shouldPrompt = true;
     }
-    console.log(shouldPrompt);
 
     window.addEventListener('beforeunload', function (event) {
         if (shouldPrompt) {
