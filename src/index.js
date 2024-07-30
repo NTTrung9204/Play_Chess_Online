@@ -13,6 +13,13 @@ const sessionMiddleware = session({
     cookie: { secure: false, maxAge: 600000000 },
 });
 
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server);
+const socketService = require('./app/service/socketService');
+global._io = io;
+
 db.connect();
 
 app.use(express.static(path.join(__dirname, "public")));
@@ -37,6 +44,7 @@ app.use(sessionMiddleware);
 app.set("view engine", "hbs");
 app.set("views", path.join(__dirname, "resources/views"));
 
+global._io.on('connection', socketService.connection)
 routes(app);
 
-app.listen(port, () => console.log(`http://localhost:${port}`));
+server.listen(port, () => console.log(`http://localhost:${port}`));

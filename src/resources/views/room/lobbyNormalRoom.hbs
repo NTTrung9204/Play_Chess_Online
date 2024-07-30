@@ -12,7 +12,8 @@
     <a href="/normalMatch/createRoom">Create room</a>
 </button>
 
-<script>
+<script src="/socket.io/socket.io.js"></script>
+{{!-- <script>
     let shouldPrompt = false;
 
     // Đặt cờ khi người dùng đang ở URL /abc
@@ -29,4 +30,9 @@
         }
     });
 
+</script> --}}
+
+
+<script>
+    var socket = io();
 </script>
