@@ -1,7 +1,80 @@
 <p>
-    White player: {{#if room.white_player}} {{room.white_player.username}} {{else}} No player {{/if}}
+    White player: {{#if room.white_player}}
+    <span id="White" data-user_id="{{room.white_player._id}}">{{room.white_player.username}} </span>
+    {{else}}
+    <span id="White" data-user_id="">
+        <button class="btn__join" data-player="White">join</button>
+    </span>
+    {{/if}}
 </p>
 
 <p>
-    Black player: {{#if room.black_player}} {{room.black_player.username}} {{else}} No player {{/if}}
+    Black player: {{#if room.black_player}}
+    <span id="Black" data-user_id="{{room.black_player._id}}"> {{room.black_player.username}} </span>
+    {{else}}
+    <span id="Black" data-user_id="">
+        <button class="btn__join" data-player="Black">join</button>
+    </span>
+    {{/if}}
 </p>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+    const socket = io();
+    socket.emit("join", "{{room._id}}", "{{user._id}}");
+
+    function settingJoin() {
+        $(".btn__join").click(function () {
+            const player = $(this).data("player");
+            console.log(player);
+            socket.emit("join__normal__room", player, "{{room._id}}", "{{user._id}}", socket.id);
+        });
+    }
+
+    settingJoin()
+
+    socket.on("join__normal__room", (player, player__name) => {
+        console.log(player, player__name);
+        if (player === "White") {
+            $("#White").html(player__name);
+            $("#White").attr("data-user_id", player__name);
+        }
+        if (player === "Black") {
+            $("#Black").html(player__name);
+            $("#Black").attr("data-user_id", player__name);
+        }
+    });
+
+    socket.on("user_disconnect", (user_id) => {
+        console.log(user_id);
+        if ($("#White").attr("data-user_id") === user_id) {
+            $("#White").html("<button class='btn__join' data-player='White'>join</button>");
+            $("#White").attr("data-user_id", "");
+            settingJoin()
+        }
+        if ($("#Black").attr("data-user_id") === user_id) {
+            $("#Black").html("<button class='btn__join' data-player='Black'>join</button>");
+            $("#Black").attr("data-user_id", "");
+            joinGame()
+        }
+    });
+</script>
+
+<script>
+    let shouldPrompt = false;
+    console.log($("#Black").attr("data-user_id"), $("#White").attr("data-user_id"));
+
+    if ("{{user._id}}" === $("#Black").attr("data-user_id") || "{{user._id}}" === $("#White").attr("data-user_id")) {
+        shouldPrompt = true;
+    }
+    console.log(shouldPrompt);
+
+    window.addEventListener('beforeunload', function (event) {
+        if (shouldPrompt) {
+            event.preventDefault();
+            event.returnValue = '';
+        }
+    });
+
+</script>

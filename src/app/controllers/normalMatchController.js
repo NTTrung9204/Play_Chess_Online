@@ -45,6 +45,7 @@ class normalMatchController {
     join_room(req, res) {
         const user_id = req.session.user_id;
         const id_room = req.params.id_room;
+        var user;
         if(user_id){
             roomDB.findById(id_room)
                 .then((room) => {
@@ -53,7 +54,8 @@ class normalMatchController {
                         if(!room.is_closed){
                             const white_player = userDB.findById(room.white_player);
                             const black_player = userDB.findById(room.black_player);
-                            Promise.all([white_player, black_player])
+                            const current_player = userDB.findById(user_id);
+                            Promise.all([white_player, black_player, current_player])
                                 .then((players) => {
                                     if(players[0]){
                                         room.white_player = getRecord.getOneRecord(players[0]);
@@ -61,8 +63,14 @@ class normalMatchController {
                                     if(players[1]){
                                         room.black_player = getRecord.getOneRecord(players[1]);
                                     }
+                                    if(players[2]){
+                                        user = getRecord.getOneRecord(players[2]);
+                                    }
+                                    else{
+                                        res.json({error: "join room failure!: invalid user id"});
+                                    }
 
-                                    res.render("room/normalRoom", { room });
+                                    res.render("room/normalRoom", { room, user});
                                 })
                                 .catch((error) => {
                                     console.log("join room failure!");
