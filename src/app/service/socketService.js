@@ -6,11 +6,45 @@ var player_storage = {};
 class socketService{
     connection(socket){
         socket.on('join', (room_id, user_id, user_name, white_player_id, black_player_id)=>{
-            socket.join(room_id);
-            const role_room = (user_id == white_player_id || user_id == black_player_id)? "player" : "viewer";
-            const new_connection = {socket_id: socket.id, user_id: user_id, user_name: user_name, role_room: role_room};
-            player_storage[room_id] ? player_storage[room_id].push(new_connection) : player_storage[room_id] = [new_connection];
-            _io.to(room_id).emit("user_connect", user_id, user_name);
+            roomDB.findById(room_id)
+                .then((room) => {
+                    room = getRecord.getOneRecord(room);
+                    if(room){
+                        if(!room.is_closed){
+                            const white_player = userDB.findById(room.white_player);
+                            const black_player = userDB.findById(room.black_player);
+                            const current_player = userDB.findById(user_id);
+                            Promise.all([white_player, black_player, current_player])
+                                .then((players) => {
+                                    if(players[0]){
+                                        room.white_player = getRecord.getOneRecord(players[0]);
+                                    }
+                                    if(players[1]){
+                                        room.black_player = getRecord.getOneRecord(players[1]);
+                                    }
+                                    socket.join(room_id);
+                                    const role_room = (user_id == white_player_id || user_id == black_player_id)? "player" : "viewer";
+                                    const new_connection = {socket_id: socket.id, user_id: user_id, user_name: user_name, role_room: role_room};
+                                    player_storage[room_id] ? player_storage[room_id].push(new_connection) : player_storage[room_id] = [new_connection];
+                                    _io.to(room_id).emit("user_connect", user_id, user_name, room);
+                                })
+                                .catch((error) => {
+                                    console.log("join room failure!");
+                                    console.log(error);
+                                });
+                        }
+                        else{
+                            console.log("join room failure!: room is closed");
+                        }
+                    }
+                    else{
+                        console.log("join room failure!: invalid room id");
+                    }
+                })
+                .catch((error) => {
+                    console.log("join failure!");
+                    console.log(error);
+                })
         })
         
         socket.on("disconnect", (arg) => {

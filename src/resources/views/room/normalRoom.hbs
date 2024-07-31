@@ -1,21 +1,15 @@
 <p>
-    White player: {{#if room.white_player}}
-    <span id="White" data-user_id="{{room.white_player._id}}">{{room.white_player.username}} </span>
-    {{else}}
+    White player: 
     <span id="White" data-user_id="">
-        <button class="btn__join" data-player="White">join</button>
+
     </span>
-    {{/if}}
 </p>
 
 <p>
-    Black player: {{#if room.black_player}}
-    <span id="Black" data-user_id="{{room.black_player._id}}"> {{room.black_player.username}} </span>
-    {{else}}
+    Black player: 
     <span id="Black" data-user_id="">
-        <button class="btn__join" data-player="Black">join</button>
+
     </span>
-    {{/if}}
 </p>
 
 <div id="message__room">
@@ -35,8 +29,6 @@
             socket.emit("join__normal__room", player, "{{room._id}}", "{{user._id}}", socket.id);
         });
     }
-
-    settingJoin()
 
     socket.on("join__normal__room", (player, player__name, player_id) => {
         if (player === "White") {
@@ -63,8 +55,26 @@
         $("#message__room").append(`<p style = "text-align: center">${user_name} left room</p>`)
     });
 
-    socket.on("user_connect", (user_id, user_name) =>{
+    socket.on("user_connect", (user_id, user_name, room) =>{
         $("#message__room").append(`<p style = "text-align: center">${user_name} joined</p>`)
+        if(room.white_player){
+            $("#White").html(room.white_player.username);
+            $("#White").attr("data-user_id", room.white_player._id);
+        }
+        else{
+            $("#White").html("<button class='btn__join' data-player='White'>join</button>");
+            $("#White").attr("data-user_id", "");
+            settingJoin()
+        }
+        if(room.black_player){
+            $("#Black").html(room.black_player.username);
+            $("#Black").attr("data-user_id", room.black_player._id);
+        }
+        else{
+            $("#Black").html("<button class='btn__join' data-player='Black'>join</button>");
+            $("#Black").attr("data-user_id", "");
+            settingJoin()
+        }
     })
 </script>
 
