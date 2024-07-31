@@ -55,6 +55,7 @@ class socketService{
                         })
                 }
                 else{
+                                
                     _io.to(room_id).emit("user_disconnect", user_id, user_name);
                     player_storage[room_id] = player_storage[room_id].filter((player) => player.socket_id != socket.id);
                     console.log("disconnect success!");
@@ -73,10 +74,10 @@ class socketService{
                             roomDB.findById(room_id)
                                 .then((room) =>{
                                     if(room){
-                                        if(player == "White" && !room.white_player){
+                                        if(player == "White" && !room.white_player && room.black_player != user_id){
                                             room.white_player = user_id;
                                         }
-                                        else if(player == "Black" && !room.black_player){
+                                        else if(player == "Black" && !room.black_player && room.white_player != user_id){
                                             room.black_player = user_id;
                                         }
                                         else{
@@ -85,8 +86,13 @@ class socketService{
                                         }
                                         room.save()
                                             .then(() => {
+                                                for (let i = 0; i < player_storage[room_id].length; i++) {
+                                                    if(player_storage[room_id][i].user_id == user_id){
+                                                        player_storage[room_id][i].role_room = "player";
+                                                    }
+                                                }
+                                                _io.to(room_id).emit("join__normal__room", player, user.username, user_id);
                                                 console.log("join__normal__room success!");
-                                                _io.to(room_id).emit("join__normal__room", player, user.username);
                                             })
                                             .catch((error) => {
                                                 console.log("join__normal__room failure!");

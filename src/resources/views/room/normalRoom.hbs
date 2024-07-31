@@ -38,14 +38,14 @@
 
     settingJoin()
 
-    socket.on("join__normal__room", (player, player__name) => {
+    socket.on("join__normal__room", (player, player__name, player_id) => {
         if (player === "White") {
             $("#White").html(player__name);
-            $("#White").attr("data-user_id", player__name);
+            $("#White").attr("data-user_id", player_id);
         }
         if (player === "Black") {
             $("#Black").html(player__name);
-            $("#Black").attr("data-user_id", player__name);
+            $("#Black").attr("data-user_id", player_id);
         }
     });
 
