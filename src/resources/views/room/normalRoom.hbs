@@ -33,9 +33,9 @@
 
     function settingKick() {
         $(".btn__kick").click(function () {
-            const player = $(this).data("player");
-            console.log(player);
-            // socket.emit("kick__normal__room", player, "{{room._id}}", "{{user._id}}", socket.id);
+            const user_id = $(this).data("player");
+            console.log(user_id);
+            socket.emit("kick__normal__room", "{{room._id}}", user_id);
         });
     }
 
@@ -135,6 +135,10 @@
                 }
             }
         }
+    });
+
+    socket.on("kick__normal__room", user_name => {
+        window.location.href = "/normalMatch";
     });
 </script>
 

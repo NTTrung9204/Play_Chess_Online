@@ -198,6 +198,12 @@ class socketService{
             }
             
         })
+
+        socket.on("kick__normal__room", (room_id, user_id) =>{
+            const user_infor = player_storage[room_id].find((player) => player.user_id == user_id);
+            _io.to(user_infor.socket_id).emit("kick__normal__room", user_infor.user_name);
+
+        })
     }
 }
 
