@@ -20,28 +20,47 @@
 
 <script>
     const socket = io();
-    socket.emit("join", "{{room._id}}", "{{user._id}}", "{{user.username}}", "{{room.white_player._id}}", "{{room.black_player._id}}");
+    setTimeout(() => {
+        socket.emit("join", "{{room._id}}", "{{user._id}}", "{{user.username}}", "{{room.white_player._id}}", "{{room.black_player._id}}", "{{room.host_room}}");
+    }, 100);
 
     function settingJoin() {
         $(".btn__join").click(function () {
             const player = $(this).data("player");
-            console.log(player);
             socket.emit("join__normal__room", player, "{{room._id}}", "{{user._id}}", socket.id);
         });
     }
 
-    socket.on("join__normal__room", (player, player__name, player_id) => {
+    function settingKick() {
+        $(".btn__kick").click(function () {
+            const player = $(this).data("player");
+            console.log(player);
+            // socket.emit("kick__normal__room", player, "{{room._id}}", "{{user._id}}", socket.id);
+        });
+    }
+
+    socket.on("join__normal__room", (player, player__name, player_id, host_user_id) => {
         if (player === "White") {
-            $("#White").html(player__name);
+            if(host_user_id === player_id){
+                $("#White").html(player__name + " (host)");
+            }
+            else{
+                $("#White").html(player__name);
+            }
             $("#White").attr("data-user_id", player_id);
         }
         if (player === "Black") {
-            $("#Black").html(player__name);
+            if(host_user_id === player_id){
+                $("#Black").html(player__name + " (host)");
+            }
+            else{
+                $("#Black").html(player__name);
+            }
             $("#Black").attr("data-user_id", player_id);
         }
     });
 
-    socket.on("user_disconnect", (user_id, user_name) => {
+    socket.on("user_disconnect", (user_id, user_name, host_room, host_change) => {
         if ($("#White").attr("data-user_id") === user_id) {
             $("#White").html("<button class='btn__join' data-player='White'>join</button>");
             $("#White").attr("data-user_id", "");
@@ -52,14 +71,31 @@
             $("#Black").attr("data-user_id", "");
             settingJoin()
         }
+        if(host_change){
+            if(host_room == $("#White").attr("data-user_id")){
+                $("#White").html($("#White").html() + " (host)");
+            }
+            if(host_room == $("#Black").attr("data-user_id")){
+                $("#Black").html($("#Black").html() + " (host)");
+            }
+        }
         $("#message__room").append(`<p style = "text-align: center">${user_name} left room</p>`)
     });
 
-    socket.on("user_connect", (user_id, user_name, room) =>{
+    socket.on("user_connect-io", (user_id, user_name, room, host_room) =>{
         $("#message__room").append(`<p style = "text-align: center">${user_name} joined</p>`)
+    })
+
+    socket.on("user_connect-socket", (user_id, user_name, room, host_room) =>{
         if(room.white_player){
-            $("#White").html(room.white_player.username);
-            $("#White").attr("data-user_id", room.white_player._id);
+            if(room.white_player._id == host_room){
+                $("#White").html(room.white_player.username + " (host)");
+                $("#White").attr("data-user_id", room.white_player._id);
+            }
+            else{
+                $("#White").html(room.white_player.username);
+                $("#White").attr("data-user_id", room.white_player._id);
+            }
         }
         else{
             $("#White").html("<button class='btn__join' data-player='White'>join</button>");
@@ -67,8 +103,15 @@
             settingJoin()
         }
         if(room.black_player){
-            $("#Black").html(room.black_player.username);
-            $("#Black").attr("data-user_id", room.black_player._id);
+            console.log(room.black_player._id, host_room, room.black_player._id == host_room);
+            if(room.black_player._id == host_room){
+                $("#Black").html(room.black_player.username + " (host)");
+                $("#Black").attr("data-user_id", room.black_player._id);
+            }
+            else{
+                $("#Black").html(room.black_player.username);
+                $("#Black").attr("data-user_id", room.black_player._id);
+            }
         }
         else{
             $("#Black").html("<button class='btn__join' data-player='Black'>join</button>");
@@ -76,6 +119,23 @@
             settingJoin()
         }
     })
+
+    socket.on("add_role_of_host", (host_role, host_user_id) => {
+        if(host_role){
+            if($("#White").attr("data-user_id")){
+                if($("#White").attr("data-user_id") != host_user_id){
+                    $("#White").append("<button class='btn__kick' data-player='" + $("#White").attr("data-user_id") + "'>kick</button>");
+                    settingKick()
+                }
+            }
+            if($("#Black").attr("data-user_id")){
+                if($("#Black").attr("data-user_id") != host_user_id){
+                    $("#Black").append("<button class='btn__kick' data-player='" + $("#Black").attr("data-user_id") + "'>kick</button>");
+                    settingKick()
+                }
+            }
+        }
+    });
 </script>
 
 <script>

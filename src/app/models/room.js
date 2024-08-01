@@ -6,6 +6,7 @@ const room = new Schema({
     type_room: { type: String, required: true },
     white_player: { type: String },
     black_player: { type: String },
+    host_room: { type: String },
     is_closed: { type: Boolean, default: false },
 });
 

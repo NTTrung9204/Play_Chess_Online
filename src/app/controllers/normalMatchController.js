@@ -25,7 +25,7 @@ class normalMatchController {
         const user_id = req.session.user_id;
         if(user_id){
             const name_room = getRandom.getNameRoom();
-            roomDB.create({ type_room: "normal", name_room, white_player: user_id })
+            roomDB.create({ type_room: "normal", name_room, white_player: user_id, host_room: user_id })
                 .then((new_room) => {
                     console.log("create room success!" + name_room + " " + new_room._id);
                     res.redirect("/normalMatch/" + new_room._id);

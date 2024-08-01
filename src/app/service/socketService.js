@@ -5,7 +5,7 @@ const getRecord = require("../utils/getRecord");
 var player_storage = {};
 class socketService{
     connection(socket){
-        socket.on('join', (room_id, user_id, user_name, white_player_id, black_player_id)=>{
+        socket.on('join', (room_id, user_id, user_name, white_player_id, black_player_id, host_room)=>{
             roomDB.findById(room_id)
                 .then((room) => {
                     room = getRecord.getOneRecord(room);
@@ -24,9 +24,11 @@ class socketService{
                                     }
                                     socket.join(room_id);
                                     const role_room = (user_id == white_player_id || user_id == black_player_id)? "player" : "viewer";
-                                    const new_connection = {socket_id: socket.id, user_id: user_id, user_name: user_name, role_room: role_room};
+                                    const new_connection = {socket_id: socket.id, user_id: user_id, user_name: user_name, role_room: role_room, host_room: false};
                                     player_storage[room_id] ? player_storage[room_id].push(new_connection) : player_storage[room_id] = [new_connection];
-                                    _io.to(room_id).emit("user_connect", user_id, user_name, room);
+                                    
+                                    _io.to(room_id).emit("user_connect-io", user_id, user_name, room, room.host_room);
+                                    socket.emit("user_connect-socket", user_id, user_name, room, room.host_room);
                                 })
                                 .catch((error) => {
                                     console.log("join room failure!");
@@ -65,13 +67,24 @@ class socketService{
                                 if(room.white_player == user_id){
                                     room.white_player = null;
                                 }
-                                else if(room.black_player == user_id){
+                                if(room.black_player == user_id){
                                     room.black_player = null;
+                                }
+                                var host_change = false;
+                                if(room.host_room == user_id){
+                                    console.log("host room disconnect");
+                                    room.host_room = room.white_player? room.white_player : room.black_player;
+                                    host_change = true;
                                 }
                                 room.save()
                                     .then(() => {
-                                        _io.to(room_id).emit("user_disconnect", user_id, user_name);
+                                        _io.to(room_id).emit("user_disconnect", user_id, user_name, room.host_room, host_change);
                                         player_storage[room_id] = player_storage[room_id].filter((player) => player.socket_id != socket.id);
+                                        // update host
+                                        if(room.host_room){
+                                            player_storage[room_id].find((player) => player.user_id == room.host_room).host_room = true;
+                                        }
+                                        console.log(room.host_room);
                                         console.log("disconnect success!");
                                     })
                                     .catch((error) => {
@@ -118,15 +131,42 @@ class socketService{
                                             console.log("join__normal__room failure!: player is not available");
                                             return;
                                         }
+                                        var host_socket_id;
+                                        var host_user_id;
+                                        for (let i = 0; i < player_storage[room_id].length; i++) {
+                                            if(player_storage[room_id][i].user_id == user_id){
+                                                player_storage[room_id][i].role_room = "player";
+                                            }
+                                            if(player_storage[room_id][i].host_room){
+                                                host_socket_id = player_storage[room_id][i].socket_id;
+                                                host_user_id = player_storage[room_id][i].user_id;
+                                            }
+                                        }
+                                        var flag = false;
+                                        if(host_socket_id){
+                                            flag = true;
+                                        }
+                                        else{
+                                            for (let i = 0; i < player_storage[room_id].length; i++) {
+                                                if(player_storage[room_id][i].user_id == user_id){
+                                                    player_storage[room_id][i].host_room = true;
+                                                    host_user_id = user_id;
+                                                    room.host_room = user_id;
+                                                    flag = true;
+                                                }
+                                            }
+                                        }
+
                                         room.save()
                                             .then(() => {
-                                                for (let i = 0; i < player_storage[room_id].length; i++) {
-                                                    if(player_storage[room_id][i].user_id == user_id){
-                                                        player_storage[room_id][i].role_room = "player";
-                                                    }
+                                                if(flag){
+                                                    _io.to(room_id).emit("join__normal__room", player, user.username, user_id, host_user_id);
+                                                    _io.to(host_socket_id).emit("add_role_of_host", true, host_user_id);
+                                                    console.log("join__normal__room success!");
                                                 }
-                                                _io.to(room_id).emit("join__normal__room", player, user.username, user_id);
-                                                console.log("join__normal__room success!");
+                                                else{
+                                                    console.log("something wrong!");
+                                                }
                                             })
                                             .catch((error) => {
                                                 console.log("join__normal__room failure!");
