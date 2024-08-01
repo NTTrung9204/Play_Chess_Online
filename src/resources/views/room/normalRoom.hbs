@@ -1,3 +1,27 @@
+<link rel="stylesheet" href="../css/chessboard-1.0.0.css">
+<style>
+    #bar_eval{
+    position: relative;
+    width: 25px;
+    height: 400px;
+    background-color: rgb(127, 127, 127);
+}
+
+    #bar_fill{
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 50%;
+        background-color: #ccc;
+        transition: all 0.5s;
+    }
+
+    #container_game{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
 <p>
     White player: 
     <span id="White" data-user_id="">
@@ -11,7 +35,12 @@
 
     </span>
 </p>
-
+    <div id="container_game">
+        <div id="board" style="width: 400px"></div>
+        <div id="bar_eval">
+            <div id="bar_fill"></div>
+        </div>
+    </div>
 <div id="message__room">
 
 </div>
@@ -103,7 +132,6 @@
             settingJoin()
         }
         if(room.black_player){
-            console.log(room.black_player._id, host_room, room.black_player._id == host_room);
             if(room.black_player._id == host_room){
                 $("#Black").html(room.black_player.username + " (host)");
                 $("#Black").attr("data-user_id", room.black_player._id);
@@ -155,5 +183,96 @@
             event.returnValue = '';
         }
     });
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.js" integrity="sha512-oprzqYFJfo4Bx/nNEcSI0xo7ggJrLc+qQ6hrS3zV/Jn0C4dsg4gu+FXW/Vm0jP9CrV7e5e6dcLUYkg3imjfjbw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD" crossorigin="anonymous"></script>
+<script>
+    var board = null;
+    var game = new Chess();
+    var $status = $("#status");
+    var $fen = $("#fen");
+    var $pgn = $("#pgn");
+    const depth = 15;
+
+    function onDragStart(source, piece, position, orientation) {
+        // do not pick up pieces if the game is over
+        if (game.game_over()) return false;
+
+        // only pick up pieces for the side to move
+        if (piece.search(/^b/) !== -1) {
+            return false;
+        }
+    }
+
+    function onDrop(source, target) {
+        // check promotion
+        var piece = game.get(source);
+        var promotion;
+        if (piece.type === "p" && (target[1] === "8" || target[1] === "1")) {
+            // ask for promotion piece
+            promotion = prompt("Promotion", "q");
+            //game.move({ from: source, to: target, promotion: promotion });
+        
+        }
+        // see if the move is legal
+        var move = game.move({
+            from: source,
+            to: target,
+            promotion: promotion,
+        });
+
+        // illegal move
+        if (move === null) return "snapback";
+
+
+    }
+
+    function onSnapEnd() {
+        board.position(game.fen());
+    }
+
+    function updateStatus() {
+        var status = "";
+
+        var moveColor = "White";
+        if (game.turn() === "b") {
+            moveColor = "Black";
+        }
+
+        // checkmate?
+        if (game.in_checkmate()) {
+            status = "Game over, " + moveColor + " is in checkmate.";
+        }
+
+        // draw?
+        else if (game.in_draw()) {
+            status = "Game over, drawn position";
+        }
+
+        // game still on
+        else {
+            status = moveColor + " to move";
+
+            // check?
+            if (game.in_check()) {
+                status += ", " + moveColor + " is in check";
+            }
+        }
+
+        $status.html(status);
+        $fen.html(game.fen());
+        $pgn.html(game.pgn());
+    }
+
+    var config = {
+        draggable: true,
+        position: "start",
+        onDragStart: onDragStart,
+        onDrop: onDrop,
+        onSnapEnd: onSnapEnd,
+    };
+    board = Chessboard("board", config);
 
 </script>
