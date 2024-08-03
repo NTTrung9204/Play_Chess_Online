@@ -78,6 +78,10 @@ class socketService{
                                 }
                                 room.save()
                                     .then(() => {
+                                        const host_user = player_storage[room_id].find((player) => player.user_id == room.host_room);
+                                        if(host_user){
+                                            _io.to(host_user.socket_id).emit("closeButtonStart", room.host_room);
+                                        }
                                         _io.to(room_id).emit("user_disconnect", user_id, user_name, room.host_room, host_change);
                                         player_storage[room_id] = player_storage[room_id].filter((player) => player.socket_id != socket.id);
                                         // update host
@@ -203,6 +207,22 @@ class socketService{
             const user_infor = player_storage[room_id].find((player) => player.user_id == user_id);
             _io.to(user_infor.socket_id).emit("kick__normal__room", user_infor.user_name);
 
+        })
+
+        socket.on("start__game", (room_id, white_player_id, black_player_id) =>{
+            console.log(player_storage[room_id]);
+            const white_player_socket_id = player_storage[room_id].find((player) => player.user_id == white_player_id).socket_id;
+            const black_player_socket_id = player_storage[room_id].find((player) => player.user_id == black_player_id).socket_id;
+            const list_viewer = player_storage[room_id].filter((player) => player.role_room == "viewer");
+            _io.to(white_player_socket_id).emit("start__game", "White");
+            _io.to(black_player_socket_id).emit("start__game", "Black");
+            list_viewer.forEach((viewer) => {
+                _io.to(viewer.socket_id).emit("start__game", "Viewer");
+            })
+        })
+
+        socket.on("player_move", (room_id, fen_string) =>{
+            _io.to(room_id).emit("new__move", fen_string);
         })
     }
 }

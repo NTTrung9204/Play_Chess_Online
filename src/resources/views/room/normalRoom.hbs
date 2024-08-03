@@ -1,4 +1,5 @@
 <link rel="stylesheet" href="../css/chessboard-1.0.0.css">
+<script src="../js/stockfish6.js"></script>
 <style>
     #bar_eval{
     position: relative;
@@ -35,15 +36,22 @@
 
     </span>
 </p>
-    <div id="container_game">
-        <div id="board" style="width: 400px"></div>
-        <div id="bar_eval">
-            <div id="bar_fill"></div>
-        </div>
+<div id="start__game">
+
+</div>
+<div id="options__game">
+
+</div>
+<div id="container_game">
+    <div id="board" style="width: 400px"></div>
+    <div id="bar_eval">
+        <div id="bar_fill"></div>
     </div>
+</div>
 <div id="message__room">
 
 </div>
+
 
 <script src="/socket.io/socket.io.js"></script>
 
@@ -65,6 +73,21 @@
             const user_id = $(this).data("player");
             console.log(user_id);
             socket.emit("kick__normal__room", "{{room._id}}", user_id);
+        });
+    }
+
+    function settingStart() {
+        $("#start__game__btn").click(function () {
+            const white_player = $("#White").attr("data-user_id");
+            const black_player = $("#Black").attr("data-user_id");
+            socket.emit("start__game", "{{room._id}}", white_player, black_player);
+        });
+    }
+
+    function settingFlip() {
+        $("#flipOrientationBtn").click(function () {
+            board.flip();
+            view_side = view_side === "White" ? "Black" : "White";
         });
     }
 
@@ -153,20 +176,61 @@
             if($("#White").attr("data-user_id")){
                 if($("#White").attr("data-user_id") != host_user_id){
                     $("#White").append("<button class='btn__kick' data-player='" + $("#White").attr("data-user_id") + "'>kick</button>");
-                    settingKick()
+                    $("#start__game").html("<button id='start__game__btn'>start game</button>");
+                    settingKick();
+                    settingStart();
                 }
             }
             if($("#Black").attr("data-user_id")){
                 if($("#Black").attr("data-user_id") != host_user_id){
                     $("#Black").append("<button class='btn__kick' data-player='" + $("#Black").attr("data-user_id") + "'>kick</button>");
-                    settingKick()
+                    $("#start__game").html("<button id='start__game__btn'>start game</button>");
+                    settingKick();
+                    settingStart();
                 }
             }
         }
     });
 
+    socket.on("closeButtonStart", (host_user_id) => {
+        $("#start__game").html("");
+    });
+
+    socket.on("start__game", (side_control) => {
+        if(side_control === "White"){
+            control = "White";
+            board.orientation('white')
+        }
+        if(side_control === "Black"){
+            control = "Black";
+            board.orientation('black')
+        }
+        if(side_control === "Viewer"){
+            control = "Viewer";
+            $("#options__game").html("<button id='flipOrientationBtn'>Flip orientation</button>");
+            settingFlip();
+        }
+        gameStart = true;
+    });
+
     socket.on("kick__normal__room", user_name => {
         window.location.href = "/normalMatch";
+    });
+
+    socket.on("new__move", (fen__string) => {
+        game.load(fen__string);
+        board.position(fen__string);
+        updateStatus();
+        console.log(fen__string);
+        window.setTimeout(()=>{
+            if(game.in_checkmate() || game.in_draw()) return;
+            console.log(game.fen());
+            // change fen string to white
+            const components = game.fen().split(" ");
+            const new_fen = components[0] + " w " + components[2] + " " + components[3] + " " + components[4] + " " + components[5];
+            stockfish.postMessage(`position fen ${new_fen}`);
+            stockfish.postMessage(`go depth ${depth}`);
+        }, 50);
     });
 </script>
 
@@ -194,15 +258,23 @@
     var $status = $("#status");
     var $fen = $("#fen");
     var $pgn = $("#pgn");
-    const depth = 15;
+    const depth = 10;
+    var control = "Viewer";
+    var view_side = "White";
+    var gameStart = false;
 
     function onDragStart(source, piece, position, orientation) {
         // do not pick up pieces if the game is over
         if (game.game_over()) return false;
 
-        // only pick up pieces for the side to move
-        if (piece.search(/^b/) !== -1) {
+        if (control === "Viewer") {
             return false;
+        }
+        if (control === "White" && gameStart){
+            if (piece.search(/^b/) !== -1) return false;
+        }
+        if (control === "Black" && gameStart){
+            if (piece.search(/^w/) !== -1) return false;
         }
     }
 
@@ -226,11 +298,12 @@
         // illegal move
         if (move === null) return "snapback";
 
-
+        socket.emit("player_move", "{{room._id}}", game.fen());
     }
 
     function onSnapEnd() {
         board.position(game.fen());
+        
     }
 
     function updateStatus() {
@@ -275,4 +348,30 @@
     };
     board = Chessboard("board", config);
 
+    var stockfish = STOCKFISH();
+
+    stockfish.onmessage = function(event) {
+        const message = event.data ? event.data : event;
+        console.log(message);
+        if (message.startsWith("info depth")) {
+            const parts = message.split(' ');
+            const evalIndex = parts.indexOf("score") + 2;
+            var evaluation = parts[evalIndex];
+            const status = parts[evalIndex - 1];
+            if (status == "mate"){
+                evaluation = evaluation < 0 ? -10000 : 10000;
+            }
+            if (control === "Black") {
+                evaluation = -evaluation;
+            }
+            if (control === "Viewer") {
+                if (view_side === "Black") {
+                    evaluation = -evaluation;
+                }
+            }
+            evaluation /= 1000;
+
+            $("#bar_fill").css("height", `${100/(1 + Math.pow(5, 2*evaluation))}%`);
+        }
+    };
 </script>
