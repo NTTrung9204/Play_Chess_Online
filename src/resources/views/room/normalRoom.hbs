@@ -224,11 +224,7 @@
         console.log(fen__string);
         window.setTimeout(()=>{
             if(game.in_checkmate() || game.in_draw()) return;
-            console.log(game.fen());
-            // change fen string to white
-            const components = game.fen().split(" ");
-            const new_fen = components[0] + " w " + components[2] + " " + components[3] + " " + components[4] + " " + components[5];
-            stockfish.postMessage(`position fen ${new_fen}`);
+            stockfish.postMessage(`position fen ${game.fen()}`);
             stockfish.postMessage(`go depth ${depth}`);
         }, 50);
     });
@@ -299,6 +295,11 @@
         if (move === null) return "snapback";
 
         socket.emit("player_move", "{{room._id}}", game.fen());
+        window.setTimeout(()=>{
+            if(game.in_checkmate() || game.in_draw()) return;
+            stockfish.postMessage(`position fen ${game.fen()}`);
+            stockfish.postMessage(`go depth ${depth}`);
+        }, 50);
     }
 
     function onSnapEnd() {
@@ -361,7 +362,10 @@
             if (status == "mate"){
                 evaluation = evaluation < 0 ? -10000 : 10000;
             }
-            if (control === "Black") {
+            if(control === "White" && game.turn() === "w"){
+                evaluation = -evaluation;
+            }
+            if(control === "Black" && game.turn() === "b"){
                 evaluation = -evaluation;
             }
             if (control === "Viewer") {
@@ -369,6 +373,7 @@
                     evaluation = -evaluation;
                 }
             }
+            console.log(evaluation);
             evaluation /= 1000;
 
             $("#bar_fill").css("height", `${100/(1 + Math.pow(5, 2*evaluation))}%`);
