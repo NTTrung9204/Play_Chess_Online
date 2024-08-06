@@ -3,6 +3,7 @@ const roomDB = require("../models/room");
 const getRecord = require("../utils/getRecord");
 
 var player_storage = {};
+var match_storage = {};
 class socketService{
     connection(socket){
         socket.on('join', (room_id, user_id, user_name, white_player_id, black_player_id, host_room)=>{
@@ -28,6 +29,12 @@ class socketService{
                                     player_storage[room_id] ? player_storage[room_id].push(new_connection) : player_storage[room_id] = [new_connection];
                                     
                                     _io.to(room_id).emit("user_connect-io", user_id, user_name, room, room.host_room);
+                                    var time_white_side_milisecond;
+                                    var time_black_side_milisecond;
+                                    // turn ?
+                                    if(match_storage[room_id]){
+
+                                    }
                                     socket.emit("user_connect-socket", user_id, user_name, room, room.host_room);
                                 })
                                 .catch((error) => {
@@ -209,8 +216,19 @@ class socketService{
 
         })
 
-        socket.on("start__game", (room_id, white_player_id, black_player_id) =>{
-            console.log(player_storage[room_id]);
+        socket.on("start__game", (room_id, white_player_id, black_player_id, time_white_side, time_black_side) =>{
+            const time_black_side_milisecond = time_black_side * 60 * 1000;
+            const time_white_side_milisecond = time_white_side * 60 * 1000;
+            match_storage[room_id] = {
+                room_id: room_id,
+                time_white_side: time_black_side_milisecond,
+                time_black_side: time_white_side_milisecond,
+                current_time_white: time_white_side_milisecond,
+                current_time_black: time_black_side_milisecond,
+                first_move: "White",
+                fen_string_start: "rrrrrrrr/pppppppp/8/8/8/8/PPPPPPPP/RRRRRRRR w KQkq - 0 1",
+                moves: []
+            }
             const white_player_socket_id = player_storage[room_id].find((player) => player.user_id == white_player_id).socket_id;
             const black_player_socket_id = player_storage[room_id].find((player) => player.user_id == black_player_id).socket_id;
             const list_viewer = player_storage[room_id].filter((player) => player.role_room == "viewer");
@@ -219,10 +237,19 @@ class socketService{
             list_viewer.forEach((viewer) => {
                 _io.to(viewer.socket_id).emit("start__game", "Viewer");
             })
+            _to.to(room_id).emit("countdownEvent", match_storage[room_id].first_move);
         })
 
-        socket.on("player_move", (room_id, fen_string) =>{
-            _io.to(room_id).emit("new__move", fen_string);
+        socket.on("player_move", (room_id, fen_string, turn, countdown_time) =>{
+            if(turn == "White"){
+                match_storage[room_id].current_time_white = countdown_time;
+            }
+            else{
+                match_storage[room_id].current_time_black = countdown_time;
+            }
+            match_storage[room_id].moves.push(fen_string);
+            const new_turn = turn == "White"? "Black" : "White";
+            _io.to(room_id).emit("new__move", fen_string, new_turn);
         })
     }
 }

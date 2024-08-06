@@ -28,6 +28,7 @@
     <span id="White" data-user_id="">
 
     </span>
+    <span id="timeWhiteSide">10.00.000</span>
 </p>
 
 <p>
@@ -35,6 +36,7 @@
     <span id="Black" data-user_id="">
 
     </span>
+    <span id="timeBlackSide">10.00.000</span>
 </p>
 <div id="start__game">
 
@@ -80,8 +82,29 @@
         $("#start__game__btn").click(function () {
             const white_player = $("#White").attr("data-user_id");
             const black_player = $("#Black").attr("data-user_id");
-            socket.emit("start__game", "{{room._id}}", white_player, black_player);
+            const time_white_side = $("#timeWhiteSide").text();
+            const time_black_side = $("#timeBlackSide").text();
+            socket.emit("start__game", "{{room._id}}", white_player, black_player, time_white_side, time_black_side);
         });
+    }
+
+    function CountdownHandle(side) {
+        const time = $("#time" + side + "Side").text().split(".");
+        const minutes = parseInt(time[0]);
+        const seconds = parseInt(time[1]);
+        const milliseconds = parseInt(time[2]);
+        countdowntime = minutes * 60 * 1000 + seconds * 1000 + milliseconds;
+        timeinterval = setInterval(() => {
+            countdowntime -= 1;
+            const minutes = Math.floor(countdowntime / 60000);
+            const seconds = Math.floor((countdowntime % 60000) / 1000);
+            const milliseconds = Math.floor((countdowntime % 1000));
+            $("#time" + side + "Side").text(minutes.toString().padStart(2, "0") + "." + seconds.toString().padStart(2, "0") + "." + milliseconds.toString().padStart(3, "0"));
+            if (countdowntime <= 0) {
+                clearInterval(timeinterval);
+                socket.emit("countdownEvent", "{{room._id}}", side);
+            }
+        }, 1);
     }
 
     function settingFlip() {
@@ -213,11 +236,15 @@
         gameStart = true;
     });
 
+    socket.on("countdownEvent", (turn) => {
+        CountdownHandle(turn);
+    });
+
     socket.on("kick__normal__room", user_name => {
         window.location.href = "/normalMatch";
     });
 
-    socket.on("new__move", (fen__string) => {
+    socket.on("new__move", (fen__string, new_turn) => {
         game.load(fen__string);
         board.position(fen__string);
         updateStatus();
@@ -227,6 +254,7 @@
             stockfish.postMessage(`position fen ${game.fen()}`);
             stockfish.postMessage(`go depth ${depth}`);
         }, 50);
+        handleCountdown(new_turn);
     });
 </script>
 
@@ -294,7 +322,10 @@
         // illegal move
         if (move === null) return "snapback";
 
-        socket.emit("player_move", "{{room._id}}", game.fen());
+        const turn = game.turn() === "w" ? "Black" : "White";
+        const countdown_time = $("#time" + turn + "Side").text();
+        socket.emit("player_move", "{{room._id}}", turn, countdownTime);
+        clearInterval(timeinterval);
         window.setTimeout(()=>{
             if(game.in_checkmate() || game.in_draw()) return;
             stockfish.postMessage(`position fen ${game.fen()}`);
