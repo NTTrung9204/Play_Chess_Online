@@ -31,11 +31,23 @@ class socketService{
                                     _io.to(room_id).emit("user_connect-io", user_id, user_name, room, room.host_room);
                                     var time_white_side_milisecond;
                                     var time_black_side_milisecond;
-                                    // turn ?
+                                    var turn;
                                     if(match_storage[room_id]){
-
+                                        time_white_side_milisecond = match_storage[room_id].current_time_white;
+                                        time_black_side_milisecond = match_storage[room_id].current_time_black;
+                                        if(match_storage[room_id].moves[0]){
+                                            const temp = match_storage[room_id].moves[match_storage[room_id].moves.length - 1];
+                                            const temp_array = temp.split(" ");
+                                            turn = temp_array[1];
+                                            if(turn == "w"){
+                                                turn = "Black";
+                                            }
+                                            else{
+                                                turn = "White";
+                                            }
+                                        }
                                     }
-                                    socket.emit("user_connect-socket", user_id, user_name, room, room.host_room);
+                                    socket.emit("user_connect-socket", user_id, user_name, room, room.host_room, time_white_side_milisecond, time_black_side_milisecond, turn);
                                 })
                                 .catch((error) => {
                                     console.log("join room failure!");
@@ -91,6 +103,10 @@ class socketService{
                                         }
                                         _io.to(room_id).emit("user_disconnect", user_id, user_name, room.host_room, host_change);
                                         player_storage[room_id] = player_storage[room_id].filter((player) => player.socket_id != socket.id);
+                                        if(player_storage[room_id].length == 0){
+                                            delete player_storage[room_id];
+                                            delete match_storage[room_id];
+                                        }
                                         // update host
                                         if(room.host_room){
                                             player_storage[room_id].find((player) => player.user_id == room.host_room).host_room = true;
@@ -237,7 +253,7 @@ class socketService{
             list_viewer.forEach((viewer) => {
                 _io.to(viewer.socket_id).emit("start__game", "Viewer");
             })
-            _to.to(room_id).emit("countdownEvent", match_storage[room_id].first_move);
+            _io.to(room_id).emit("countdownEvent", match_storage[room_id].first_move);
         })
 
         socket.on("player_move", (room_id, fen_string, turn, countdown_time) =>{

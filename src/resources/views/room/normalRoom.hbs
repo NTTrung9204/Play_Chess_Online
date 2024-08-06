@@ -28,7 +28,7 @@
     <span id="White" data-user_id="">
 
     </span>
-    <span id="timeWhiteSide">10.00.000</span>
+    <span id="timeWhiteSide">10.00.0</span>
 </p>
 
 <p>
@@ -36,7 +36,7 @@
     <span id="Black" data-user_id="">
 
     </span>
-    <span id="timeBlackSide">10.00.000</span>
+    <span id="timeBlackSide">10.00.0</span>
 </p>
 <div id="start__game">
 
@@ -93,18 +93,18 @@
         const minutes = parseInt(time[0]);
         const seconds = parseInt(time[1]);
         const milliseconds = parseInt(time[2]);
-        countdowntime = minutes * 60 * 1000 + seconds * 1000 + milliseconds;
+        countdowntime = minutes * 60 * 1000 + seconds * 1000 + milliseconds * 100;
         timeinterval = setInterval(() => {
-            countdowntime -= 1;
+            countdowntime -= 100;
             const minutes = Math.floor(countdowntime / 60000);
             const seconds = Math.floor((countdowntime % 60000) / 1000);
-            const milliseconds = Math.floor((countdowntime % 1000));
-            $("#time" + side + "Side").text(minutes.toString().padStart(2, "0") + "." + seconds.toString().padStart(2, "0") + "." + milliseconds.toString().padStart(3, "0"));
+            const milliseconds = Math.floor((countdowntime % 1000)) / 100;
+            $("#time" + side + "Side").text(minutes.toString().padStart(2, "0") + "." + seconds.toString().padStart(2, "0") + "." + milliseconds.toString().padStart(1, "0"));
             if (countdowntime <= 0) {
                 clearInterval(timeinterval);
                 socket.emit("countdownEvent", "{{room._id}}", side);
             }
-        }, 1);
+        }, 100);
     }
 
     function settingFlip() {
@@ -161,7 +161,7 @@
         $("#message__room").append(`<p style = "text-align: center">${user_name} joined</p>`)
     })
 
-    socket.on("user_connect-socket", (user_id, user_name, room, host_room) =>{
+    socket.on("user_connect-socket", (user_id, user_name, room, host_room, time_white_side_milisecond, time_black_side_milisecond, turn) =>{
         if(room.white_player){
             if(room.white_player._id == host_room){
                 $("#White").html(room.white_player.username + " (host)");
@@ -192,6 +192,19 @@
             $("#Black").attr("data-user_id", "");
             settingJoin()
         }
+        if(time_black_side_milisecond){
+            const minutes_black_side = Math.floor(time_black_side_milisecond / 60000);
+            const seconds_black_side = Math.floor((time_black_side_milisecond % 60000) / 1000);
+            const milliseconds_black_side = Math.floor((time_black_side_milisecond % 10));
+            $("#timeBlackSide").text(minutes_black_side.toString().padStart(2, "0") + "." + seconds_black_side.toString().padStart(2, "0") + "." + milliseconds_black_side.toString().padStart(1, "0"));
+        }
+        if(time_white_side_milisecond){
+            const minutes_white_side = Math.floor(time_white_side_milisecond / 60000);
+            const seconds_white_side = Math.floor((time_white_side_milisecond % 60000) / 1000);
+            const milliseconds_white_side = Math.floor((time_white_side_milisecond % 10));
+            $("#timeWhiteSide").text(minutes_white_side.toString().padStart(2, "0") + "." + seconds_white_side.toString().padStart(2, "0") + "." + milliseconds_white_side.toString().padStart(1, "0"));
+        }
+        CountdownHandle(turn);
     })
 
     socket.on("add_role_of_host", (host_role, host_user_id) => {
@@ -249,12 +262,18 @@
         board.position(fen__string);
         updateStatus();
         console.log(fen__string);
+        try{
+            clearInterval(timeinterval);
+        }
+        catch(e){
+            console.log(e);
+        }
         window.setTimeout(()=>{
             if(game.in_checkmate() || game.in_draw()) return;
             stockfish.postMessage(`position fen ${game.fen()}`);
             stockfish.postMessage(`go depth ${depth}`);
         }, 50);
-        handleCountdown(new_turn);
+        CountdownHandle(new_turn);
     });
 </script>
 
@@ -323,9 +342,15 @@
         if (move === null) return "snapback";
 
         const turn = game.turn() === "w" ? "Black" : "White";
-        const countdown_time = $("#time" + turn + "Side").text();
-        socket.emit("player_move", "{{room._id}}", turn, countdownTime);
-        clearInterval(timeinterval);
+        const countdown_time = $("#time" + turn + "Side").text().split(".");
+        const countdownTime = parseInt(countdown_time[0]) * 60 * 1000 + parseInt(countdown_time[1]) * 1000 + parseInt(countdown_time[2]);
+        socket.emit("player_move", "{{room._id}}", game.fen(), turn, countdownTime);
+        try{
+            clearInterval(timeinterval);
+        }
+        catch(e){
+            console.log(e);
+        }
         window.setTimeout(()=>{
             if(game.in_checkmate() || game.in_draw()) return;
             stockfish.postMessage(`position fen ${game.fen()}`);
