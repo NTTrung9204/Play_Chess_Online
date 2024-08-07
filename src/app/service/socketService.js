@@ -267,6 +267,16 @@ class socketService{
             const new_turn = turn == "White"? "Black" : "White";
             _io.to(room_id).emit("new__move", fen_string, new_turn, countdown_time);
         })
+
+        socket.on("game_over", (room_id, result, winner) =>{
+            if(result === "checkmate"){
+                _io.to(room_id).emit("game_over", result, winner);
+            }
+            else{
+                _io.to(room_id).emit("game_over", result, null);
+                
+            }
+        })
     }
 }
 

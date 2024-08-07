@@ -282,6 +282,15 @@
         $("#time" + old_turn + "Side").text(format_time);
         CountdownHandle(new_turn);
     });
+
+    socket.on("game_over", (result, winner) => {
+        if(result === "checkmate"){
+            alert(winner + " win");
+        }
+        if(result === "draw"){
+            alert("Draw");
+        }
+    });
 </script>
 
 <script>
@@ -344,6 +353,12 @@
             to: target,
             promotion: promotion,
         });
+
+        if(game.game_over()){
+            const result = game.in_checkmate() ? "checkmate" : "draw";
+            const winner = game.turn() === "w" ? "Black" : "White";
+            socket.emit("game_over", "{{room._id}}", result, winner);
+        }
 
         // illegal move
         if (move === null) return "snapback";
@@ -438,6 +453,7 @@
                 if (view_side === "White" && game.turn() === "b") {
                     evaluation = -evaluation;
                 }
+                evaluation = -evaluation;
             }
             console.log(evaluation);
             evaluation /= 1000;
