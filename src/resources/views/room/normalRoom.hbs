@@ -432,7 +432,10 @@
                 evaluation = -evaluation;
             }
             if (control === "Viewer") {
-                if (view_side === "Black") {
+                if (view_side === "Black" && game.turn() === "w") {
+                    evaluation = -evaluation;
+                }
+                if (view_side === "White" && game.turn() === "b") {
                     evaluation = -evaluation;
                 }
             }
