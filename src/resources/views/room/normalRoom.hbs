@@ -88,18 +88,25 @@
         });
     }
 
+    function milliseconds2Time(mls) {
+        const minutes = Math.floor(mls / 60000);
+        const seconds = Math.floor((mls % 60000) / 1000);
+        const milliseconds = Math.floor((mls % 1000) / 100);
+        return minutes.toString().padStart(2, "0") + "." + seconds.toString().padStart(2, "0") + "." + milliseconds.toString().padStart(1, "0");
+    }
+
+    function time2Milliseconds(t) {
+        const time = t.split(".");
+        return parseInt(time[0]) * 60 * 1000 + parseInt(time[1]) * 1000 + parseInt(time[2]) * 100;
+    }
+
     function CountdownHandle(side) {
-        const time = $("#time" + side + "Side").text().split(".");
-        const minutes = parseInt(time[0]);
-        const seconds = parseInt(time[1]);
-        const milliseconds = parseInt(time[2]);
-        countdowntime = minutes * 60 * 1000 + seconds * 1000 + milliseconds * 100;
+        const time = $("#time" + side + "Side").text();
+        countdowntime = time2Milliseconds(time);
         timeinterval = setInterval(() => {
             countdowntime -= 100;
-            const minutes = Math.floor(countdowntime / 60000);
-            const seconds = Math.floor((countdowntime % 60000) / 1000);
-            const milliseconds = Math.floor((countdowntime % 1000)) / 100;
-            $("#time" + side + "Side").text(minutes.toString().padStart(2, "0") + "." + seconds.toString().padStart(2, "0") + "." + milliseconds.toString().padStart(1, "0"));
+            const newTime = milliseconds2Time(countdowntime);
+            $("#time" + side + "Side").text(newTime);
             if (countdowntime <= 0) {
                 clearInterval(timeinterval);
                 socket.emit("countdownEvent", "{{room._id}}", side);
@@ -193,18 +200,14 @@
             settingJoin()
         }
         if(time_black_side_milisecond){
-            const minutes_black_side = Math.floor(time_black_side_milisecond / 60000);
-            const seconds_black_side = Math.floor((time_black_side_milisecond % 60000) / 1000);
-            const milliseconds_black_side = Math.floor((time_black_side_milisecond % 10));
-            $("#timeBlackSide").text(minutes_black_side.toString().padStart(2, "0") + "." + seconds_black_side.toString().padStart(2, "0") + "." + milliseconds_black_side.toString().padStart(1, "0"));
+            const time_black_side = milliseconds2Time(time_black_side_milisecond);
+            $("#timeBlackSide").text(time_black_side);
         }
         if(time_white_side_milisecond){
-            const minutes_white_side = Math.floor(time_white_side_milisecond / 60000);
-            const seconds_white_side = Math.floor((time_white_side_milisecond % 60000) / 1000);
-            const milliseconds_white_side = Math.floor((time_white_side_milisecond % 10));
-            $("#timeWhiteSide").text(minutes_white_side.toString().padStart(2, "0") + "." + seconds_white_side.toString().padStart(2, "0") + "." + milliseconds_white_side.toString().padStart(1, "0"));
+            const time_white_side = milliseconds2Time(time_white_side_milisecond);
+            $("#timeWhiteSide").text(time_white_side);
         }
-        CountdownHandle(turn);
+        //CountdownHandle(turn);
     })
 
     socket.on("add_role_of_host", (host_role, host_user_id) => {
@@ -257,7 +260,8 @@
         window.location.href = "/normalMatch";
     });
 
-    socket.on("new__move", (fen__string, new_turn) => {
+    socket.on("new__move", (fen__string, new_turn, milliseconds) => {
+        console.log(milliseconds);
         game.load(fen__string);
         board.position(fen__string);
         updateStatus();
@@ -273,6 +277,9 @@
             stockfish.postMessage(`position fen ${game.fen()}`);
             stockfish.postMessage(`go depth ${depth}`);
         }, 50);
+        const old_turn = new_turn === "White" ? "Black" : "White";
+        const format_time = milliseconds2Time(milliseconds);
+        $("#time" + old_turn + "Side").text(format_time);
         CountdownHandle(new_turn);
     });
 </script>
@@ -342,9 +349,9 @@
         if (move === null) return "snapback";
 
         const turn = game.turn() === "w" ? "Black" : "White";
-        const countdown_time = $("#time" + turn + "Side").text().split(".");
-        const countdownTime = parseInt(countdown_time[0]) * 60 * 1000 + parseInt(countdown_time[1]) * 1000 + parseInt(countdown_time[2]);
-        socket.emit("player_move", "{{room._id}}", game.fen(), turn, countdownTime);
+        const countdown_time = $("#time" + turn + "Side").text();
+        const countdownTime_milisecond = time2Milliseconds(countdown_time);
+        socket.emit("player_move", "{{room._id}}", game.fen(), turn, countdownTime_milisecond);
         try{
             clearInterval(timeinterval);
         }

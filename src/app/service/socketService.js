@@ -265,7 +265,7 @@ class socketService{
             }
             match_storage[room_id].moves.push(fen_string);
             const new_turn = turn == "White"? "Black" : "White";
-            _io.to(room_id).emit("new__move", fen_string, new_turn);
+            _io.to(room_id).emit("new__move", fen_string, new_turn, countdown_time);
         })
     }
 }
