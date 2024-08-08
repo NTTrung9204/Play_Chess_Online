@@ -59,6 +59,7 @@
 
 <script>
     const socket = io();
+    var timeinterval = null;
     setTimeout(() => {
         socket.emit("join", "{{room._id}}", "{{user._id}}", "{{user.username}}", "{{room.white_player._id}}", "{{room.black_player._id}}", "{{room.host_room}}");
     }, 100);
@@ -121,7 +122,7 @@
         });
     }
 
-    socket.on("join__normal__room", (player, player__name, player_id, host_user_id) => {
+    function handleJoinNormalRoom(player, player__name, player_id, host_user_id) {
         if (player === "White") {
             if(host_user_id === player_id){
                 $("#White").html(player__name + " (host)");
@@ -140,116 +141,170 @@
             }
             $("#Black").attr("data-user_id", player_id);
         }
+    }
+
+    function handleUserOut(player) {
+        $("#" + player).html("<button class='btn__join' data-player='" + player + "'>join</button>");
+        $("#" + player).attr("data-user_id", "");
+        settingJoin();
+    }
+
+    function handleUserConnect(player, player__name, player_id, is_host_room) {
+        if (is_host_room) {
+            $("#" + player).html(player__name + " (host)");
+        } else {
+            $("#" + player).html(player__name);
+        }
+        $("#" + player).attr("data-user_id", player_id);
+    }
+
+    function handlehostChange(new_host) {
+        if ($("#White").attr("data-user_id") === new_host) {
+            $("#White").html($("#White").html() + " (host)");
+        }
+        if ($("#Black").attr("data-user_id") === new_host) {
+            $("#Black").html($("#Black").html() + " (host)");
+        }
+    }
+
+    function leaseMessage(message) {
+        $("#message__room").append(`<p style = "text-align: center">${message}</p>`)
+    }
+
+    function settingTime(time, side) {
+        const format_time = milliseconds2Time(time);
+        $("#time" + side + "Side").text(format_time);
+    }
+
+    function addBtnKick(side) {
+        $("#" + side).append("<button class='btn__kick' data-player='" + $("#" + side).attr("data-user_id") + "'>kick</button>");
+        settingKick();
+    }
+
+    function removeBtnKick(side) {
+        $("#" + side + " .btn__kick").remove();
+    }
+
+    function addBtnStart() {
+        $("#start__game").html("<button id='start__game__btn'>start game</button>");
+        settingStart();
+    }
+
+    function removeBtnStart() {
+        $("#start__game").html("");
+    }
+
+    function determineSideByEqual(target_id){
+        if($("#White").attr("data-user_id") === target_id){
+            return "White";
+        }
+        if($("#Black").attr("data-user_id") === target_id){
+            return "Black";
+        }
+        return null
+    }
+    
+    function determineSideByInequal(target_id){
+        if($("#White").attr("data-user_id") !== target_id && $("#White").attr("data-user_id")){
+            return "White";
+        }
+        if($("#Black").attr("data-user_id") !== target_id && $("#Black").attr("data-user_id")){
+            return "Black";
+        }
+        return null
+    }
+
+    function addHostRole(host_user_id){
+        const side = determineSideByInequal(host_user_id);
+        addBtnKick(side);
+        if(side){
+            addBtnStart();
+        }
+    }
+
+    function settingUpGame(side_control) {
+        const board_side = side_control === "White" ? "white" : "black";
+        control = side_control;
+        board.orientation(board_side);
+
+        if (side_control === "Viewer") {
+            settingOptionGame();
+        }
+        gameStart = true;
+
+        const kickId = $(".btn__kick").data("player");
+        const sideOfKick = determineSideByEqual(kickId);
+        removeBtnKick(sideOfKick);
+        removeBtnStart();
+    }
+
+    function settingOptionGame(){
+        $("#options__game").html("<button id='flipOrientationBtn'>Flip orientation</button>");
+        settingFlip();
+    }
+
+    socket.on("join__normal__room", (player, player__name, player_id, host_user_id) => {
+        handleJoinNormalRoom(player, player__name, player_id, host_user_id);
     });
 
     socket.on("user_disconnect", (user_id, user_name, host_room, host_change) => {
-        if ($("#White").attr("data-user_id") === user_id) {
-            $("#White").html("<button class='btn__join' data-player='White'>join</button>");
-            $("#White").attr("data-user_id", "");
-            settingJoin()
+        const side = determineSideByEqual(user_id);
+        if (side) {
+            handleUserOut(side);
         }
-        if ($("#Black").attr("data-user_id") === user_id) {
-            $("#Black").html("<button class='btn__join' data-player='Black'>join</button>");
-            $("#Black").attr("data-user_id", "");
-            settingJoin()
+        if (host_change) {
+            handlehostChange(host_room);
         }
-        if(host_change){
-            if(host_room == $("#White").attr("data-user_id")){
-                $("#White").html($("#White").html() + " (host)");
-            }
-            if(host_room == $("#Black").attr("data-user_id")){
-                $("#Black").html($("#Black").html() + " (host)");
-            }
-        }
-        $("#message__room").append(`<p style = "text-align: center">${user_name} left room</p>`)
+        leaseMessage(user_name + " left");
     });
 
     socket.on("user_connect-io", (user_id, user_name, room, host_room) =>{
-        $("#message__room").append(`<p style = "text-align: center">${user_name} joined</p>`)
+        leaseMessage(user_name + " join");
     })
 
     socket.on("user_connect-socket", (user_id, user_name, room, host_room, time_white_side_milisecond, time_black_side_milisecond, turn) =>{
         if(room.white_player){
             if(room.white_player._id == host_room){
-                $("#White").html(room.white_player.username + " (host)");
-                $("#White").attr("data-user_id", room.white_player._id);
+                handleUserConnect("White", room.white_player.username, room.white_player._id, true);
             }
             else{
-                $("#White").html(room.white_player.username);
-                $("#White").attr("data-user_id", room.white_player._id);
+                handleUserConnect("White", room.white_player.username, room.white_player._id, false);
             }
         }
         else{
-            $("#White").html("<button class='btn__join' data-player='White'>join</button>");
-            $("#White").attr("data-user_id", "");
-            settingJoin()
+            handleUserOut("White");
         }
         if(room.black_player){
             if(room.black_player._id == host_room){
-                $("#Black").html(room.black_player.username + " (host)");
-                $("#Black").attr("data-user_id", room.black_player._id);
+                handleUserConnect("Black", room.black_player.username, room.black_player._id, true);
             }
             else{
-                $("#Black").html(room.black_player.username);
-                $("#Black").attr("data-user_id", room.black_player._id);
+                handleUserConnect("Black", room.black_player.username, room.black_player._id, false);
             }
         }
         else{
-            $("#Black").html("<button class='btn__join' data-player='Black'>join</button>");
-            $("#Black").attr("data-user_id", "");
-            settingJoin()
+            handleUserOut("Black");
         }
         if(time_black_side_milisecond){
-            const time_black_side = milliseconds2Time(time_black_side_milisecond);
-            $("#timeBlackSide").text(time_black_side);
+            settingTime(time_black_side_milisecond, "Black");
         }
         if(time_white_side_milisecond){
-            const time_white_side = milliseconds2Time(time_white_side_milisecond);
-            $("#timeWhiteSide").text(time_white_side);
+            settingTime(time_white_side_milisecond, "White");
         }
-        //CountdownHandle(turn);
     })
 
     socket.on("add_role_of_host", (host_role, host_user_id) => {
         if(host_role){
-            if($("#White").attr("data-user_id")){
-                if($("#White").attr("data-user_id") != host_user_id){
-                    $("#White").append("<button class='btn__kick' data-player='" + $("#White").attr("data-user_id") + "'>kick</button>");
-                    $("#start__game").html("<button id='start__game__btn'>start game</button>");
-                    settingKick();
-                    settingStart();
-                }
-            }
-            if($("#Black").attr("data-user_id")){
-                if($("#Black").attr("data-user_id") != host_user_id){
-                    $("#Black").append("<button class='btn__kick' data-player='" + $("#Black").attr("data-user_id") + "'>kick</button>");
-                    $("#start__game").html("<button id='start__game__btn'>start game</button>");
-                    settingKick();
-                    settingStart();
-                }
-            }
+            addHostRole(host_user_id);
         }
     });
 
     socket.on("closeButtonStart", (host_user_id) => {
-        $("#start__game").html("");
+        removeBtnStart();
     });
 
     socket.on("start__game", (side_control) => {
-        if(side_control === "White"){
-            control = "White";
-            board.orientation('white')
-        }
-        if(side_control === "Black"){
-            control = "Black";
-            board.orientation('black')
-        }
-        if(side_control === "Viewer"){
-            control = "Viewer";
-            $("#options__game").html("<button id='flipOrientationBtn'>Flip orientation</button>");
-            settingFlip();
-        }
-        gameStart = true;
+        settingUpGame(side_control);
     });
 
     socket.on("countdownEvent", (turn) => {
@@ -260,27 +315,40 @@
         window.location.href = "/normalMatch";
     });
 
-    socket.on("new__move", (fen__string, new_turn, milliseconds) => {
-        console.log(milliseconds);
+    function settingPosition(fen__string) {
         game.load(fen__string);
         board.position(fen__string);
         updateStatus();
-        console.log(fen__string);
-        try{
-            clearInterval(timeinterval);
-        }
-        catch(e){
+    }
+
+    function tryClearInterval(nameInterval) {
+        console.log(nameInterval);
+        try {
+            clearInterval(nameInterval);
+        } catch (e) {
             console.log(e);
         }
+    }
+
+    function makeEvalution(){
         window.setTimeout(()=>{
             if(game.in_checkmate() || game.in_draw()) return;
             stockfish.postMessage(`position fen ${game.fen()}`);
             stockfish.postMessage(`go depth ${depth}`);
         }, 50);
+    }
+
+    function settingTimeAndHandleCountdown(new_turn, time_milisecond){
         const old_turn = new_turn === "White" ? "Black" : "White";
-        const format_time = milliseconds2Time(milliseconds);
-        $("#time" + old_turn + "Side").text(format_time);
+        settingTime(time_milisecond, old_turn);
         CountdownHandle(new_turn);
+    }
+
+    socket.on("new__move", (fen__string, new_turn, milliseconds) => {
+        settingPosition(fen__string);
+        tryClearInterval(timeinterval);
+        makeEvalution();
+        settingTimeAndHandleCountdown(new_turn, milliseconds);
     });
 
     socket.on("game_over", (result, winner) => {
@@ -290,6 +358,9 @@
         if(result === "draw"){
             alert("Draw");
         }
+        setTimeout(() =>{
+            tryClearInterval(timeinterval);
+        }, 100);
     });
 </script>
 
@@ -453,7 +524,7 @@
                 if (view_side === "White" && game.turn() === "b") {
                     evaluation = -evaluation;
                 }
-                evaluation = -evaluation;
+                evaluation = evaluation;
             }
             console.log(evaluation);
             evaluation /= 1000;
