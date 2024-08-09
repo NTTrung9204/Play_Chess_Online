@@ -53,6 +53,7 @@
 <div id="message__room">
 
 </div>
+<span id="fen_string_start" data-fenString=""></span>
 
 
 <script src="/socket.io/socket.io.js"></script>
@@ -231,6 +232,12 @@
             settingOptionGame();
         }
         gameStart = true;
+        var fen__string__start = $("#fen_string_start").data("fenString");
+        if (!fen__string__start) {
+            fen__string__start = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+        }
+        settingPosition(fen__string__start);
+        
 
         const kickId = $(".btn__kick").data("player");
         const sideOfKick = determineSideByEqual(kickId);
@@ -316,8 +323,8 @@
     });
 
     function settingPosition(fen__string) {
-        game.load(fen__string);
         board.position(fen__string);
+        game.load(fen__string);
         updateStatus();
     }
 
@@ -351,7 +358,7 @@
         settingTimeAndHandleCountdown(new_turn, milliseconds);
     });
 
-    socket.on("game_over", (result, winner) => {
+    function handleGameOver(result, winner){
         if(result === "checkmate"){
             alert(winner + " win");
         }
@@ -360,6 +367,24 @@
         }
         setTimeout(() =>{
             tryClearInterval(timeinterval);
+            settingTime(600000, "White");
+            settingTime(600000, "Black");
+        }, 100);
+    }
+
+    socket.on("game_over", (result, winner) => {
+        handleGameOver(result, winner);
+    });
+
+    socket.on("go_to_start_mode", (host_user_id) => {
+        setTimeout(() => {
+            const side = determineSideByInequal(host_user_id);
+            console.log(side, host_user_id);
+            if(side){
+                addBtnKick(side);
+                addBtnStart();
+            }
+
         }, 100);
     });
 </script>

@@ -269,13 +269,15 @@ class socketService{
         })
 
         socket.on("game_over", (room_id, result, winner) =>{
+            const host_socket_id = player_storage[room_id].find((player) => player.host_room).socket_id;
+            const host_user_id = player_storage[room_id].find((player) => player.host_room).user_id;
             if(result === "checkmate"){
                 _io.to(room_id).emit("game_over", result, winner);
             }
             else{
                 _io.to(room_id).emit("game_over", result, null);
-                
             }
+            _io.to(host_socket_id).emit("go_to_start_mode", host_user_id);
         })
     }
 }
