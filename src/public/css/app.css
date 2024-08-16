@@ -12,4 +12,8 @@
   margin-top: 50px;
 }
 
+#chess__board {
+  transition: all 0.3s;
+}
+
 /*# sourceMappingURL=app.css.map */

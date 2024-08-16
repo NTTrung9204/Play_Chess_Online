@@ -1,14 +1,15 @@
 <link rel="stylesheet" href="../css/chessboard-1.0.0.css">
+<link rel="stylesheet" href="../css/tab.css">
 <script src="../js/stockfish6.js"></script>
 <style>
-    #bar_eval{
-    position: relative;
-    width: 25px;
-    height: 400px;
-    background-color: rgb(127, 127, 127);
-}
+    #bar_eval {
+        position: relative;
+        width: 25px;
+        height: 400px;
+        background-color: rgb(127, 127, 127);
+    }
 
-    #bar_fill{
+    #bar_fill {
         position: absolute;
         bottom: 0;
         width: 100%;
@@ -17,14 +18,358 @@
         transition: all 0.5s;
     }
 
-    #container_game{
+    #container_game {
         display: flex;
         justify-content: center;
         align-items: center;
     }
 </style>
+<div id="main__layout">
+    <div class="main__layout__item">
+        <div id="chess__board">
+            <div id="container_game">
+                <div id="board" style="width: 400px"></div>
+                <div id="bar_eval">
+                    <div id="bar_fill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="main__layout__item">
+        <div id="container__tab" class="container">
+            <div class="card__tab tabs">
+                <input id="tab-1" type="radio" class="tab tab-selector" checked="checked" name="tab" />
+                <label for="tab-1" class="tab tab-primary">Chat</label>
+                <input id="tab-2" type="radio" class="tab tab-selector" name="tab" />
+                <label for="tab-2" class="tab tab-success">History</label>
+                <input id="tab-3" type="radio" class="tab tab-selector" name="tab" />
+                <label for="tab-3" class="tab tab-default">Participants</label>
+                <input id="tab-4" type="radio" class="tab tab-selector" name="tab" />
+                <label for="tab-4" class="tab tab-warning">Setting</label>
+                <i id="close__tab__icon" class="far fa-times-circle"></i>
+                <section class="content">
+                    <div class="item" id="chat">
+                        <div id="show__message__chat">
+                            <span class="player__message">
+                                <img class="player__message-avatar"
+                                    src="https://cdn.openart.ai/published/dKOb2q4NHzOorebxhOHn/d35TtG9A_tbbO_1024.webp"
+                                    alt="">
+                                <span class="player__message-name">Player_Name</span>
+                                <span class="player__message-elo">1200</span>
+                                <span class="player__message-text">Hello</span>
+                            </span>
+                            <span class="player__message">
+                                <img class="player__message-avatar"
+                                    src="https://cdn.openart.ai/published/dKOb2q4NHzOorebxhOHn/d35TtG9A_tbbO_1024.webp"
+                                    alt="">
+                                <span class="player__message-name">Player_Name</span>
+                                <span class="player__message-elo">1200</span>
+                                <span class="player__message-text">Lorem ipsum dolor, sit amet consectetur
+                                    adipisicing elit.
+                                    Beatae nobis quam nemo a veniam possimus obcaecati repellat eius. Rerum
+                                    officia labore
+                                    animi
+                                    fugit asperiores qui illo eveniet magnam tempora deserunt.</span>
+                            </span>
+                            <span class="join__left__message">
+                                <span class="join__left__message-text">Player_Name left the room</span>
+                            </span>
+
+                            <div id="chat__input">
+                                <input type="text" id="chat__input-text" placeholder="Type a message">
+                                <i id="chat__input-send" class="fas fa-paper-plane"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="item" id="history">
+                        <table id="history_moves">
+                            <tr>
+                                <th>Side</th>
+                                <th>Move</th>
+                            </tr>
+                            <tr>
+                                <td>Trung</td>
+                                <td>e2-e3</td>
+                            </tr>
+                            <tr>
+                                <td>Chun</td>
+                                <td>f3-g5</td>
+                            </tr>
+                            <tr>
+                                <td>Trung</td>
+                                <td>e2-e8</td>
+                            </tr>
+                            <tr>
+                                <td>Trung</td>
+                                <td>e2-e3</td>
+                            </tr>
+                            <tr>
+                                <td>Chun</td>
+                                <td>f3-g5</td>
+                            </tr>
+                            <tr>
+                                <td>Trung</td>
+                                <td>e2-e8</td>
+                            </tr>
+                            <tr>
+                                <td>Trung</td>
+                                <td>e2-e3</td>
+                            </tr>
+                            <tr>
+                                <td>Chun</td>
+                                <td>f3-g5</td>
+                            </tr>
+                            <tr>
+                                <td>Trung</td>
+                                <td>e2-e8</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="item" id="participants">
+                        <table id="list__participants">
+                            <tr>
+                                <td>
+                                    <span class="player__message">
+                                        <img class="player__message-avatar"
+                                            src="https://cdn.openart.ai/published/dKOb2q4NHzOorebxhOHn/d35TtG9A_tbbO_1024.webp"
+                                            alt="">
+                                        <span class="player__message-name">Player_Name</span>
+                                        <span class="player__message-elo">1200</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-globe-americas"></i>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="player__message">
+                                        <img class="player__message-avatar"
+                                            src="https://cdn.openart.ai/published/dKOb2q4NHzOorebxhOHn/d35TtG9A_tbbO_1024.webp"
+                                            alt="">
+                                        <span class="player__message-name">Player_Name</span>
+                                        <span class="player__message-elo">1200</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-globe-americas"></i>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="player__message">
+                                        <img class="player__message-avatar"
+                                            src="https://cdn.openart.ai/published/dKOb2q4NHzOorebxhOHn/d35TtG9A_tbbO_1024.webp"
+                                            alt="">
+                                        <span class="player__message-name">Player_Name</span>
+                                        <span class="player__message-elo">1200</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-globe-americas"></i>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="player__message">
+                                        <img class="player__message-avatar"
+                                            src="https://cdn.openart.ai/published/dKOb2q4NHzOorebxhOHn/d35TtG9A_tbbO_1024.webp"
+                                            alt="">
+                                        <span class="player__message-name">Player_Name</span>
+                                        <span class="player__message-elo">1200</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-globe-americas"></i>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="player__message">
+                                        <img class="player__message-avatar"
+                                            src="https://cdn.openart.ai/published/dKOb2q4NHzOorebxhOHn/d35TtG9A_tbbO_1024.webp"
+                                            alt="">
+                                        <span class="player__message-name">Player_Name</span>
+                                        <span class="player__message-elo">1200</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-globe-americas"></i>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="player__message">
+                                        <img class="player__message-avatar"
+                                            src="https://cdn.openart.ai/published/dKOb2q4NHzOorebxhOHn/d35TtG9A_tbbO_1024.webp"
+                                            alt="">
+                                        <span class="player__message-name">Player_Name</span>
+                                        <span class="player__message-elo">1200</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-globe-americas"></i>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="player__message">
+                                        <img class="player__message-avatar"
+                                            src="https://cdn.openart.ai/published/dKOb2q4NHzOorebxhOHn/d35TtG9A_tbbO_1024.webp"
+                                            alt="">
+                                        <span class="player__message-name">Player_Name</span>
+                                        <span class="player__message-elo">1200</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-globe-americas"></i>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="player__message">
+                                        <img class="player__message-avatar"
+                                            src="https://cdn.openart.ai/published/dKOb2q4NHzOorebxhOHn/d35TtG9A_tbbO_1024.webp"
+                                            alt="">
+                                        <span class="player__message-name">Player_Name</span>
+                                        <span class="player__message-elo">1200</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-globe-americas"></i>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <span class="player__message">
+                                        <img class="player__message-avatar"
+                                            src="https://cdn.openart.ai/published/dKOb2q4NHzOorebxhOHn/d35TtG9A_tbbO_1024.webp"
+                                            alt="">
+                                        <span class="player__message-name">Player_Name</span>
+                                        <span class="player__message-elo">1200</span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-globe-americas"></i>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div class="item" id="settings">
+                        <div id="list__settings">
+                            <div id="choose__frist__turn">
+                                <p class="option__title">
+                                    <span class="option__title-text">FIRST TURN</span>
+                                </p>
+                                <div class="radio-input">
+                                    <label class="label">
+                                        <input type="radio" id="value-1" checked="" name="value-radio"
+                                            value="value-1" />
+                                        <span class="text__side">White</span>
+                                    </label>
+                                    <label class="label">
+                                        <input type="radio" id="value-2" name="value-radio" value="value-2" />
+                                        <span class="text__side">Black</span>
+                                    </label>
+                                    <label class="label">
+                                        <input type="radio" id="value-3" name="value-radio" value="value-3" />
+                                        <span class="text__side">Alternate</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div id="choose__time__control">
+                                <p class="option__title">
+                                    <span class="option__title-text">TIME</span>
+                                </p>
+                                <div id="choose__opt__time">
+                                    <div class="total__time">
+                                        <span class="total__time-label">Total time: </span>
+                                        <div class="select__total" tabindex="1">
+                                            <input class="selectopt__total" name="total__time" type="radio" id="opt1"
+                                                checked>
+                                            <label for="opt1" class="option__total">15m</label>
+                                            <input class="selectopt__total" name="total__time" type="radio" id="opt2">
+                                            <label for="opt2" class="option__total">20m</label>
+                                            <input class="selectopt__total" name="total__time" type="radio" id="opt3">
+                                            <label for="opt3" class="option__total">30m</label>
+                                            <input class="selectopt__total" name="total__time" type="radio" id="opt4">
+                                            <label for="opt4" class="option__total">60m</label>
+                                            <input class="selectopt__total" name="total__time" type="radio" id="opt5">
+                                            <label for="opt5" class="option__total">120m</label>
+                                        </div>
+                                    </div>
+                                    <div class="total__time">
+                                        <span class="total__time-label">Plus time: </span>
+                                        <div class="select__plus" tabindex="2">
+                                            <input class="selectopt__plus" name="plus__time" type="radio" id="opt11"
+                                                checked>
+                                            <label for="opt11" class="option__plus">15s</label>
+                                            <input class="selectopt__plus" name="plus__time" type="radio" id="opt21">
+                                            <label for="opt21" class="option__plus">20s</label>
+                                            <input class="selectopt__plus" name="plus__time" type="radio" id="opt31">
+                                            <label for="opt31" class="option__plus">30s</label>
+                                            <input class="selectopt__plus" name="plus__time" type="radio" id="opt41">
+                                            <label for="opt41" class="option__plus">60s</label>
+                                            <input class="selectopt__plus" name="plus__time" type="radio" id="opt51">
+                                            <label for="opt51" class="option__plus">120s</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="options__tool">
+                                <p class="option__title">
+                                    <span class="option__title-text">TOOLS</span>
+                                </p>
+                                <div id="list__tools">
+                                    <div id="tool__container">
+                                        <span>Evaluation bar</span>
+                                        <label class="container__tool__checkbox">
+                                            <input type="checkbox" checked>
+                                            <svg viewBox="0 0 64 64" height="1.2em" width="1.2em">
+                                                <path
+                                                    d="M 0 16 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 16 L 32 48 L 64 16 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 16"
+                                                    pathLength="575.0541381835938" class="path"></path>
+                                            </svg>
+                                        </label>
+                                    </div>
+                                    <div id="tool__container">
+                                        <span>Taking back move</span>
+                                        <label class="container__tool__checkbox">
+                                            <input type="checkbox">
+                                            <svg viewBox="0 0 64 64" height="1.2em" width="1.2em">
+                                                <path
+                                                    d="M 0 16 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 16 L 32 48 L 64 16 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 16"
+                                                    pathLength="575.0541381835938" class="path"></path>
+                                            </svg>
+                                        </label>
+                                    </div>
+                                    <div id="tool__container">
+                                        <span>Sound</span>
+                                        <label class="container__tool__checkbox">
+                                            <input type="checkbox" checked>
+                                            <svg viewBox="0 0 64 64" height="1.2em" width="1.2em">
+                                                <path
+                                                    d="M 0 16 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 16 L 32 48 L 64 16 V 8 A 8 8 90 0 0 56 0 H 8 A 8 8 90 0 0 0 8 V 56 A 8 8 90 0 0 8 64 H 56 A 8 8 90 0 0 64 56 V 16"
+                                                    pathLength="575.0541381835938" class="path"></path>
+                                            </svg>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+    <div id="menu__show" class="hidden__animation">
+        <i id="menu__show-icon" class="fas fa-bars"></i>
+    </div>
+</div>
 <p>
-    White player: 
+    White player:
     <span id="White" data-user_id="">
 
     </span>
@@ -32,7 +377,7 @@
 </p>
 
 <p>
-    Black player: 
+    Black player:
     <span id="Black" data-user_id="">
 
     </span>
@@ -44,12 +389,7 @@
 <div id="options__game">
 
 </div>
-<div id="container_game">
-    <div id="board" style="width: 400px"></div>
-    <div id="bar_eval">
-        <div id="bar_fill"></div>
-    </div>
-</div>
+
 <div id="message__room">
 
 </div>
@@ -125,19 +465,19 @@
 
     function handleJoinNormalRoom(player, player__name, player_id, host_user_id) {
         if (player === "White") {
-            if(host_user_id === player_id){
+            if (host_user_id === player_id) {
                 $("#White").html(player__name + " (host)");
             }
-            else{
+            else {
                 $("#White").html(player__name);
             }
             $("#White").attr("data-user_id", player_id);
         }
         if (player === "Black") {
-            if(host_user_id === player_id){
+            if (host_user_id === player_id) {
                 $("#Black").html(player__name + " (host)");
             }
-            else{
+            else {
                 $("#Black").html(player__name);
             }
             $("#Black").attr("data-user_id", player_id);
@@ -195,30 +535,30 @@
         $("#start__game").html("");
     }
 
-    function determineSideByEqual(target_id){
-        if($("#White").attr("data-user_id") === target_id){
+    function determineSideByEqual(target_id) {
+        if ($("#White").attr("data-user_id") === target_id) {
             return "White";
         }
-        if($("#Black").attr("data-user_id") === target_id){
-            return "Black";
-        }
-        return null
-    }
-    
-    function determineSideByInequal(target_id){
-        if($("#White").attr("data-user_id") !== target_id && $("#White").attr("data-user_id")){
-            return "White";
-        }
-        if($("#Black").attr("data-user_id") !== target_id && $("#Black").attr("data-user_id")){
+        if ($("#Black").attr("data-user_id") === target_id) {
             return "Black";
         }
         return null
     }
 
-    function addHostRole(host_user_id){
+    function determineSideByInequal(target_id) {
+        if ($("#White").attr("data-user_id") !== target_id && $("#White").attr("data-user_id")) {
+            return "White";
+        }
+        if ($("#Black").attr("data-user_id") !== target_id && $("#Black").attr("data-user_id")) {
+            return "Black";
+        }
+        return null
+    }
+
+    function addHostRole(host_user_id) {
         const side = determineSideByInequal(host_user_id);
         addBtnKick(side);
-        if(side){
+        if (side) {
             addBtnStart();
         }
     }
@@ -237,7 +577,7 @@
             fen__string__start = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         }
         settingPosition(fen__string__start);
-        
+
 
         const kickId = $(".btn__kick").data("player");
         const sideOfKick = determineSideByEqual(kickId);
@@ -245,7 +585,7 @@
         removeBtnStart();
     }
 
-    function settingOptionGame(){
+    function settingOptionGame() {
         $("#options__game").html("<button id='flipOrientationBtn'>Flip orientation</button>");
         settingFlip();
     }
@@ -265,43 +605,43 @@
         leaseMessage(user_name + " left");
     });
 
-    socket.on("user_connect-io", (user_id, user_name, room, host_room) =>{
+    socket.on("user_connect-io", (user_id, user_name, room, host_room) => {
         leaseMessage(user_name + " join");
     })
 
-    socket.on("user_connect-socket", (user_id, user_name, room, host_room, time_white_side_milisecond, time_black_side_milisecond, turn) =>{
-        if(room.white_player){
-            if(room.white_player._id == host_room){
+    socket.on("user_connect-socket", (user_id, user_name, room, host_room, time_white_side_milisecond, time_black_side_milisecond, turn) => {
+        if (room.white_player) {
+            if (room.white_player._id == host_room) {
                 handleUserConnect("White", room.white_player.username, room.white_player._id, true);
             }
-            else{
+            else {
                 handleUserConnect("White", room.white_player.username, room.white_player._id, false);
             }
         }
-        else{
+        else {
             handleUserOut("White");
         }
-        if(room.black_player){
-            if(room.black_player._id == host_room){
+        if (room.black_player) {
+            if (room.black_player._id == host_room) {
                 handleUserConnect("Black", room.black_player.username, room.black_player._id, true);
             }
-            else{
+            else {
                 handleUserConnect("Black", room.black_player.username, room.black_player._id, false);
             }
         }
-        else{
+        else {
             handleUserOut("Black");
         }
-        if(time_black_side_milisecond){
+        if (time_black_side_milisecond) {
             settingTime(time_black_side_milisecond, "Black");
         }
-        if(time_white_side_milisecond){
+        if (time_white_side_milisecond) {
             settingTime(time_white_side_milisecond, "White");
         }
     })
 
     socket.on("add_role_of_host", (host_role, host_user_id) => {
-        if(host_role){
+        if (host_role) {
             addHostRole(host_user_id);
         }
     });
@@ -337,15 +677,15 @@
         }
     }
 
-    function makeEvalution(){
-        window.setTimeout(()=>{
-            if(game.in_checkmate() || game.in_draw()) return;
+    function makeEvalution() {
+        window.setTimeout(() => {
+            if (game.in_checkmate() || game.in_draw()) return;
             stockfish.postMessage(`position fen ${game.fen()}`);
             stockfish.postMessage(`go depth ${depth}`);
         }, 50);
     }
 
-    function settingTimeAndHandleCountdown(new_turn, time_milisecond){
+    function settingTimeAndHandleCountdown(new_turn, time_milisecond) {
         const old_turn = new_turn === "White" ? "Black" : "White";
         settingTime(time_milisecond, old_turn);
         CountdownHandle(new_turn);
@@ -358,14 +698,14 @@
         settingTimeAndHandleCountdown(new_turn, milliseconds);
     });
 
-    function handleGameOver(result, winner){
-        if(result === "checkmate"){
+    function handleGameOver(result, winner) {
+        if (result === "checkmate") {
             alert(winner + " win");
         }
-        if(result === "draw"){
+        if (result === "draw") {
             alert("Draw");
         }
-        setTimeout(() =>{
+        setTimeout(() => {
             tryClearInterval(timeinterval);
             settingTime(600000, "White");
             settingTime(600000, "Black");
@@ -380,7 +720,7 @@
         setTimeout(() => {
             const side = determineSideByInequal(host_user_id);
             console.log(side, host_user_id);
-            if(side){
+            if (side) {
                 addBtnKick(side);
                 addBtnStart();
             }
@@ -404,9 +744,15 @@
     });
 
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.js" integrity="sha512-oprzqYFJfo4Bx/nNEcSI0xo7ggJrLc+qQ6hrS3zV/Jn0C4dsg4gu+FXW/Vm0jP9CrV7e5e6dcLUYkg3imjfjbw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+    integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.js"
+    integrity="sha512-oprzqYFJfo4Bx/nNEcSI0xo7ggJrLc+qQ6hrS3zV/Jn0C4dsg4gu+FXW/Vm0jP9CrV7e5e6dcLUYkg3imjfjbw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"
+    integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD"
+    crossorigin="anonymous"></script>
 <script>
     var board = null;
     var game = new Chess();
@@ -425,10 +771,10 @@
         if (control === "Viewer") {
             return false;
         }
-        if (control === "White" && gameStart){
+        if (control === "White" && gameStart) {
             if (piece.search(/^b/) !== -1) return false;
         }
-        if (control === "Black" && gameStart){
+        if (control === "Black" && gameStart) {
             if (piece.search(/^w/) !== -1) return false;
         }
     }
@@ -441,7 +787,7 @@
             // ask for promotion piece
             promotion = prompt("Promotion", "q");
             //game.move({ from: source, to: target, promotion: promotion });
-        
+
         }
         // see if the move is legal
         var move = game.move({
@@ -450,7 +796,7 @@
             promotion: promotion,
         });
 
-        if(game.game_over()){
+        if (game.game_over()) {
             const result = game.in_checkmate() ? "checkmate" : "draw";
             const winner = game.turn() === "w" ? "Black" : "White";
             socket.emit("game_over", "{{room._id}}", result, winner);
@@ -463,14 +809,14 @@
         const countdown_time = $("#time" + turn + "Side").text();
         const countdownTime_milisecond = time2Milliseconds(countdown_time);
         socket.emit("player_move", "{{room._id}}", game.fen(), turn, countdownTime_milisecond);
-        try{
+        try {
             clearInterval(timeinterval);
         }
-        catch(e){
+        catch (e) {
             console.log(e);
         }
-        window.setTimeout(()=>{
-            if(game.in_checkmate() || game.in_draw()) return;
+        window.setTimeout(() => {
+            if (game.in_checkmate() || game.in_draw()) return;
             stockfish.postMessage(`position fen ${game.fen()}`);
             stockfish.postMessage(`go depth ${depth}`);
         }, 50);
@@ -478,7 +824,7 @@
 
     function onSnapEnd() {
         board.position(game.fen());
-        
+
     }
 
     function updateStatus() {
@@ -525,7 +871,7 @@
 
     var stockfish = STOCKFISH();
 
-    stockfish.onmessage = function(event) {
+    stockfish.onmessage = function (event) {
         const message = event.data ? event.data : event;
         console.log(message);
         if (message.startsWith("info depth")) {
@@ -533,13 +879,13 @@
             const evalIndex = parts.indexOf("score") + 2;
             var evaluation = parts[evalIndex];
             const status = parts[evalIndex - 1];
-            if (status == "mate"){
+            if (status == "mate") {
                 evaluation = evaluation < 0 ? -10000 : 10000;
             }
-            if(control === "White" && game.turn() === "w"){
+            if (control === "White" && game.turn() === "w") {
                 evaluation = -evaluation;
             }
-            if(control === "Black" && game.turn() === "b"){
+            if (control === "Black" && game.turn() === "b") {
                 evaluation = -evaluation;
             }
             if (control === "Viewer") {
@@ -554,7 +900,36 @@
             console.log(evaluation);
             evaluation /= 1000;
 
-            $("#bar_fill").css("height", `${100/(1 + Math.pow(5, 2*evaluation))}%`);
+            $("#bar_fill").css("height", `${100 / (1 + Math.pow(5, 2 * evaluation))}%`);
         }
     };
+</script>
+<script>
+    const mainLayOutItem = $(".main__layout__item");
+    const tab = $("container__tab");
+    const closeTab = $("#close__tab__icon");
+    const menuShow = $("#menu__show");
+    const chessBoard = $("#chess__board");
+    closeTab.on("click", () => {
+        console.log("close");
+        tab.addClass("hidden__animation");
+        chessBoard.addClass("zoom__in__chessboard");
+        setTimeout(() => {
+            mainLayOutItem[1].style.width = "0%";
+            mainLayOutItem[0].style.width = "100%";
+        }, 10);
+        menuShow.removeClass("hidden__animation");
+    });
+
+    menuShow.on("click", () => {
+        console.log("open");
+        mainLayOutItem[1].style.display = "flex";
+        chessBoard.removeClass("zoom__in__chessboard");
+        setTimeout(() => {
+            tab.removeClass("hidden__animation");
+            mainLayOutItem[1].style.width = "50%";
+            mainLayOutItem[0].style.width = "50%";
+        }, 10);
+        menuShow.addClass("hidden__animation");
+    });
 </script>
